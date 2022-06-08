@@ -1,20 +1,24 @@
 {
   "format": 1,
   "restore": {
-    "D:\\.Net Code\\SingleToDuplicateConsole\\SingleToDuplciate.csproj": {}
+    "D:\\RowanPersonalFile\\CodingFIle\\PersonalProject\\.NET\\SVGGenerate\\SingleToDuplciate.csproj": {}
   },
   "projects": {
-    "D:\\.Net Code\\SingleToDuplicateConsole\\SingleToDuplciate.csproj": {
+    "D:\\RowanPersonalFile\\CodingFIle\\PersonalProject\\.NET\\SVGGenerate\\SingleToDuplciate.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\.Net Code\\SingleToDuplicateConsole\\SingleToDuplciate.csproj",
+        "projectUniqueName": "D:\\RowanPersonalFile\\CodingFIle\\PersonalProject\\.NET\\SVGGenerate\\SingleToDuplciate.csproj",
         "projectName": "SingleToDuplciate",
-        "projectPath": "D:\\.Net Code\\SingleToDuplicateConsole\\SingleToDuplciate.csproj",
-        "packagesPath": "C:\\Users\\Luoy\\.nuget\\packages\\",
-        "outputPath": "D:\\.Net Code\\SingleToDuplicateConsole\\obj\\",
+        "projectPath": "D:\\RowanPersonalFile\\CodingFIle\\PersonalProject\\.NET\\SVGGenerate\\SingleToDuplciate.csproj",
+        "packagesPath": "C:\\Users\\Rowan\\.nuget\\packages\\",
+        "outputPath": "D:\\RowanPersonalFile\\CodingFIle\\PersonalProject\\.NET\\SVGGenerate\\obj\\",
         "projectStyle": "PackageReference",
+        "fallbackFolders": [
+          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
+        ],
         "configFilePaths": [
-          "C:\\Users\\Luoy\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Users\\Rowan\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
         "originalTargetFrameworks": [
@@ -22,6 +26,8 @@
         ],
         "sources": {
           "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+          "D:\\MyPackages": {},
+          "http://nuget.cafepress.io/CPNugetServer/nuget": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
