@@ -2,3 +2,5 @@
 /.vs
 /bin
 /Images
+/lib/SVGGenerate/obj
+/lib/SVGGenerate/bin/Debug

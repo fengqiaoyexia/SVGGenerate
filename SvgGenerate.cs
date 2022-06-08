@@ -20,8 +20,6 @@ namespace SingleToDuplciate
         private double _offset1;
         private double _offset2;
         private Dictionary<string, string> _textElementDict = new Dictionary<string, string>();
-        private Dictionary<string, string> _defsRectIdDict = new Dictionary<string, string>();
-        private Dictionary<string, string> _clipPathRectIdDict = new Dictionary<string, string>();
         private XmlElement _originalContainer;
         private XmlElement _duplicateContainer;
 
@@ -59,16 +57,16 @@ namespace SingleToDuplciate
                 UpdateGFillPath(gFillPathNode);
             }
 
-            var defsNodes = root.SelectNodes("/svg:defs", _manager);
+            var defsNodes = root.SelectNodes("//svg:defs", _manager);
             if (defsNodes?.Count > 0)
             {
                 UpdateDefsNode(defsNodes.Cast<XmlNode>().ToList());
             }
 
-            var clipPathNodes = root.SelectNodes("/svg:clipPath", _manager);
+            var clipPathNodes = root.SelectNodes("//svg:clipPath", _manager);
             if (clipPathNodes?.Count > 0)
             {
-                UpdateClipPathNode(defsNodes.Cast<XmlNode>().ToList());
+                UpdateClipPathNode(clipPathNodes.Cast<XmlNode>().ToList());
             }
 
             var gImageNodes = root.SelectNodes("//*[@cpbv:class='image']", _manager);
@@ -123,9 +121,8 @@ namespace SingleToDuplciate
             var parentNode = nodes[0].ParentNode;
             foreach (var node in nodes)
             {
-                var index = nodes.IndexOf(node);
-                var orginalNode = GenerateImageNode(node, true, index);
-                var duplicateNode = GenerateImageNode(node, false, index);
+                var orginalNode = GenerateImageNode(node, true);
+                var duplicateNode = GenerateImageNode(node, false);
 
                 parentNode.RemoveChild(node);
                 _originalContainer.AppendChild(orginalNode);
@@ -138,10 +135,8 @@ namespace SingleToDuplciate
             var parentNode = nodes[0].ParentNode;
             foreach (var node in nodes)
             {
-                var index = nodes.IndexOf(node);
-
-                var orginalNode = GenerateTextNode(node, true, index);
-                var duplicateNode = GenerateTextNode(node, false, index);
+                var orginalNode = GenerateTextNode(node, true);
+                var duplicateNode = GenerateTextNode(node, false);
 
                 parentNode.RemoveChild(node);
                 _originalContainer.AppendChild(orginalNode);
@@ -166,7 +161,6 @@ namespace SingleToDuplciate
             var parentNode = nodes[0].ParentNode;
             foreach (var node in nodes)
             {
-                var index = nodes.IndexOf(node);
                 var orginalNode = GenerateDefsNode(node, true);
                 var duplicateNode = GenerateDefsNode(node, false);
 
@@ -181,7 +175,6 @@ namespace SingleToDuplciate
             var parentNode = nodes[0].ParentNode;
             foreach (var node in nodes)
             {
-                var index = nodes.IndexOf(node);
                 var orginalNode = GenerateClipPathNode(node, true);
                 var duplicateNode = GenerateClipPathNode(node, false);
 
@@ -272,7 +265,7 @@ namespace SingleToDuplciate
             return result;
         }
 
-        private XmlNode GenerateImageNode(XmlNode node, bool isOriginal, int index)
+        private XmlNode GenerateImageNode(XmlNode node, bool isOriginal)
         {
             var resultNode = node.CloneNode(true);
 
@@ -290,11 +283,11 @@ namespace SingleToDuplciate
             var duplicateTransformStr = string.Join(" ", transformArray);
             resultNode.Attributes["transform"].Value = $"matrix({duplicateTransformStr})";
 
-            UpdateImageNodeId(resultNode, isOriginal ? index : index + 1);
+            UpdateImageNodeId(resultNode, isOriginal);
             return resultNode;
         }
 
-        private XmlNode GenerateTextNode(XmlNode node, bool isOriginal, int index)
+        private XmlNode GenerateTextNode(XmlNode node, bool isOriginal)
         {
             var resultNode = node.CloneNode(true);
             var transform = resultNode.Attributes["transform"].Value;
@@ -391,7 +384,7 @@ namespace SingleToDuplciate
 
             var rectNode = resultNode.SelectSingleNode("//svg:rect", _manager);
             {
-                var id = rectNode.Attributes["id"].Value;
+                UpdateRectNodeId(rectNode, isOriginal);
             }
 
             return resultNode;
@@ -399,10 +392,12 @@ namespace SingleToDuplciate
 
         private XmlNode GenerateClipPathNode(XmlNode node, bool isOriginal)
         {
-            return null;
+            var resultNode = node.CloneNode(true);
+            UpdateClipPathNodeId(resultNode, isOriginal);
+            return resultNode;
         }
 
-        private void UpdateImageNodeId(XmlNode node, int offset)
+        private void UpdateImageNodeId(XmlNode node, bool isOriginal)
         {
             var pattern = @"\d+";
             var gIDAttribute = node.Attributes["id"];
@@ -410,19 +405,17 @@ namespace SingleToDuplciate
             {
                 var gID = gIDAttribute.Value;
                 var gID_num = Convert.ToInt32(Regex.Match(gID, pattern).Groups[0].Value);
-                gIDAttribute.Value = gID.Replace($"canvasFront_image_{gID_num}", $"canvasFront_image_{gID_num + offset}");
+                gIDAttribute.Value = gID.Replace(gID_num.ToString(), (gID_num * 2 - (isOriginal ? 1 : 0)).ToString());
             }
 
-            var clipPathID = "";
-            var clipPathID_num = 0;
             if (node.SelectSingleNode("//*[contains(@id,'CLIPPATH')]", _manager) != null)
             {
                 var clipPathIDAttribute = node.SelectSingleNode("//*[contains(@id,'CLIPPATH')]", _manager).Attributes["id"];
                 if (clipPathIDAttribute != null)
                 {
-                    clipPathID = clipPathIDAttribute.Value;
-                    clipPathID_num = Convert.ToInt32(Regex.Match(clipPathID, pattern).Groups[0].Value);
-                    clipPathIDAttribute.Value = clipPathID.Replace($"CLIPPATH_{clipPathID_num}", $"CLIPPATH_{clipPathID_num + offset}");
+                    var clipPathID = clipPathIDAttribute.Value;
+                    var clipPathID_num = Convert.ToInt32(Regex.Match(clipPathID, pattern).Groups[0].Value);
+                    clipPathIDAttribute.Value = clipPathID.Replace(clipPathID_num.ToString(), (clipPathID_num * 2 - (isOriginal ? 1 : 0)).ToString());
                 }
             }
 
@@ -431,13 +424,15 @@ namespace SingleToDuplciate
             {
                 var imageID = imageIDAttribute.Value;
                 var imageID_num = Convert.ToInt32(Regex.Match(imageID, pattern).Groups[0].Value);
-                imageIDAttribute.Value = imageID.Replace($"i{imageID_num}", $"i{imageID_num + offset}");
+                imageIDAttribute.Value = imageID.Replace(imageID_num.ToString(), (imageID_num * 2 - (isOriginal ? 1 : 0)).ToString());
             }
 
             var clipPathAttribute = node.Attributes["clip-path"];
             if (clipPathAttribute != null)
             {
-                clipPathAttribute.Value = $"url(#{clipPathID.Replace($"CLIPPATH_{clipPathID_num}", $"CLIPPATH_{clipPathID_num + offset}")})";
+                var clipPathValue = clipPathAttribute.Value;
+                var clipPathValue_num = Convert.ToInt32(Regex.Match(clipPathValue, pattern).Groups[0].Value);
+                clipPathAttribute.Value = clipPathAttribute.Value.Replace(clipPathValue_num.ToString(), (clipPathValue_num * 2 - (isOriginal ? 1 : 0)).ToString());
             }
         }
 
@@ -493,6 +488,38 @@ namespace SingleToDuplciate
                     }
                     tspanNode.Attributes["y"].Value = (tspanY * sizeScale).ToString();
                 }
+            }
+        }
+
+        private void UpdateRectNodeId(XmlNode node, bool isOriginal)
+        {
+            var pattern = @"\d+";
+            var rectIDAttribute = node.Attributes["id"];
+            if (rectIDAttribute != null)
+            {
+                var rectID = rectIDAttribute.Value;
+                var rectID_num = Convert.ToInt32(Regex.Match(rectID, pattern).Groups[0].Value);
+                rectIDAttribute.Value = rectID.Replace(rectID_num.ToString(), (rectID_num * 2 - (isOriginal ? 1 : 0)).ToString());
+            }
+        }
+
+        private void UpdateClipPathNodeId(XmlNode node, bool isOriginal)
+        {
+            var pattern = @"\d+";
+            var clipPathIDAttribute = node.Attributes["id"];
+            if (clipPathIDAttribute != null)
+            {
+                var clipPathID = clipPathIDAttribute.Value;
+                var clipPathID_num = Convert.ToInt32(Regex.Match(clipPathID, pattern).Groups[0].Value);
+                clipPathIDAttribute.Value = clipPathID.Replace(clipPathID_num.ToString(), (clipPathID_num * 2 - (isOriginal ? 1 : 0)).ToString());
+            }
+
+            var useHrefAttribute = node.SelectSingleNode("//svg:use", _manager)?.Attributes["xlink:href"];
+            if (useHrefAttribute != null)
+            {
+                var useHref = useHrefAttribute.Value;
+                var useHref_num = Convert.ToInt32(Regex.Match(useHref, pattern).Groups[0].Value);
+                useHrefAttribute.Value = useHref.Replace(useHref_num.ToString(), (useHref_num * 2 - (isOriginal ? 1 : 0)).ToString());
             }
         }
 
